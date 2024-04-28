@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import './App.css';
 import axios from "axios";
 import JSONPretty from 'react-json-pretty';
 import 'react-json-pretty/themes/monikai.css';
-
+import './App.css';
+import CircularIndeterminate from "./components/loading/loading";
 
 const App = () => {
   const [API, setAPI] = useState('');
   const [apiResult, setApiResult] = useState(null);
   const [apiErrors, setApiErrors] = useState(null);
+  const [isLoading, setIsLoading] = useState(false)
 
   const checkAPI = async () => {
+    setIsLoading(true)
     try {
       const response = await axios.get(`${API}`);
       setApiResult(response);
@@ -18,29 +20,58 @@ const App = () => {
     } catch (e) {
       setApiResult(null);
       setApiErrors(e);
-      console.log(e)
+    } finally {
+      setIsLoading(false)
     }
   };
 
-  const jsonTheme = {
-    background: 'red'
+  const clear = () => {
+    setApiResult(null)
+    setApiErrors(null)
+    setAPI('')
   }
 
   return (
     <div>
       <h1>Проверка API на CORS</h1>
       <div className='APIS'>
-        <input className='input-text' type="text" placeholder='Введите Ваш API' onChange={(e) => setAPI(e.target.value)}/>
-        <input className='input-button' type="button" value='Проверить' onClick={checkAPI}/>
+        <input
+          className='input-text'
+          type="text"
+          placeholder='Введите Ваш API'
+          value={API}
+          onChange={(e) => setAPI(e.target.value)}
+        />
+
+        <input
+          className='input-button'
+          type="button"
+          value='Проверить'
+          onClick={checkAPI}
+        />
+
+        <input
+          className='input-button'
+          type="button"
+          value='Очистить'
+          onClick={clear}
+        />
+
       </div>
-      <div className="API-result">
+
+      {isLoading ?
+        <CircularIndeterminate/>
+        :
+        <div className="API-result">
           <div>
-            {apiResult && <JSONPretty  theme = { jsonTheme } id="json-pretty" data={apiResult}></JSONPretty>}
+            {apiResult && <JSONPretty id="json-pretty" data={apiResult}></JSONPretty>}
           </div>
           <div>
-            {apiErrors && <JSONPretty style={{fontSize: "1.1em", overflow: 'hidden'}} id="json-pretty" data={apiErrors}></JSONPretty>}
+            {apiErrors && <JSONPretty id="json-pretty" data={apiErrors}></JSONPretty>}
           </div>
-      </div>
+        </div>
+      }
+
     </div>
   );
 };
